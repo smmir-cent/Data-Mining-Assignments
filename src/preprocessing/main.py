@@ -4,9 +4,11 @@ from sklearn import preprocessing
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import PCA
 
 df = pd.DataFrame()
 label_encoder = True
+columns = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
 
 def loadData(dataset_path):
     global df
@@ -52,7 +54,7 @@ def categoricalEncoder():
     
 
 def normalization():
-    global df
+    global df,columns
     ## 5
     print("######### 5 #########")
     print("before normalization(mean,variance)")
@@ -62,12 +64,15 @@ def normalization():
         f"sepal_width: {mean['sepal_width']},{var['sepal_width']} - "
         f"petal_length: {mean['petal_length']},{var['petal_length']} - "
         f"petal_width: {mean['petal_width']},{var['petal_width']}")
-    col_names = ['sepal_length','sepal_width','petal_length','petal_width']
-    features = df[col_names]
-    scaler = StandardScaler().fit(features.values)
-    features = scaler.transform(features.values)
-    df[col_names] = features
-    # print(df)
+
+    x = df.loc[:, columns].values
+    y = df.loc[:,['target']].values
+    x = StandardScaler().fit_transform(x)
+    y = y.transpose()[0]
+    df = pd.DataFrame(x, columns =columns,dtype = float)
+    s1 = pd.Series(y, name='target')
+    df = pd.concat([df, s1], axis=1)
+    
     print("after normalization(mean,variance)")
     var = df.var()
     mean = df.mean()
@@ -76,11 +81,19 @@ def normalization():
         f"petal_length: {mean['petal_length']},{var['petal_length']} - "
         f"petal_width: {mean['petal_width']},{var['petal_width']}")
     print("######### /5 #########")
+    return x,y
 
-def pca():
-    pass
+def pca(x,y):
+    pca = PCA(n_components=2)
+    principalComponents = pca.fit_transform(x)
+    principalDf = pd.DataFrame(data = principalComponents
+                , columns = ['principal component 1', 'principal component 2'])
+    s1 = pd.Series(y, name='target')
+    principalDf = pd.concat([principalDf, s1], axis=1)
+    # print(principalDf)
+    return principalDf
 
-def visualize():
+def visualize(principalDf):
     pass
 
 if __name__ == '__main__':
@@ -88,7 +101,7 @@ if __name__ == '__main__':
     loadData(dataset_path)
     handlingMissingData()
     categoricalEncoder()
-    normalization()
-    pca()
-    visualize()
+    x,y = normalization()
+    principalDf = pca(x,y)
+    visualize(principalDf)
 
