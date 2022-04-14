@@ -3,8 +3,9 @@ import pandas as pd
 from sklearn import preprocessing
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import StandardScaler
-from sklearn.compose import ColumnTransformer
 from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+
 
 df = pd.DataFrame()
 label_encoder = True
@@ -94,7 +95,26 @@ def pca(x,y):
     return principalDf
 
 def visualize(principalDf):
-    pass
+    fig = plt.figure(figsize = (8,8))
+    ax = fig.add_subplot(1,1,1) 
+    ax.set_xlabel('Principal Component 1', fontsize = 15)
+    ax.set_ylabel('Principal Component 2', fontsize = 15)
+    ax.set_title('2 component PCA', fontsize = 20)
+    targets = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
+    colors = ['r', 'g', 'b']
+    for _, tuple in principalDf.groupby("target"):
+        print("****")
+        plt.scatter(tuple["principal component 1"], tuple["principal component 2"])
+    ax.legend(targets)
+    ax.grid()
+    ax.plot()
+    fig.savefig("main.png")
+    plt.cla()
+    plt.figure(figsize = (10,10))
+    boxplot = df.boxplot(column=['sepal_length','sepal_width','petal_length','petal_width'])
+    # fig.savefig("boxplot.png")
+    plt.savefig("boxplot.png")
+    
 
 if __name__ == '__main__':
     dataset_path = 'assets/iris.data'
