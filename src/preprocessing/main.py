@@ -8,7 +8,9 @@ import matplotlib.pyplot as plt
 
 
 df = pd.DataFrame()
-label_encoder = True
+box_plot_df = pd.DataFrame()
+
+
 columns = ['sepal_length', 'sepal_width', 'petal_length', 'petal_width']
 
 def loadData(dataset_path):
@@ -17,7 +19,7 @@ def loadData(dataset_path):
     names=['sepal_length','sepal_width','petal_length','petal_width','target'])
 
 def handlingMissingData():
-    global df
+    global df,box_plot_df
     ## 1 
     print("######### 1 #########")
     print(f"sepal_length: {df['sepal_length'].isna().sum()} - "  
@@ -29,6 +31,8 @@ def handlingMissingData():
 
     ## 2
     df = df.dropna()
+    df = df.reset_index(drop=True)
+    box_plot_df = df.copy()
     print("######### 2 #########")
     print(f"sepal_length: {df['sepal_length'].isna().sum()} - "  
         f"sepal_width: {df['sepal_width'].isna().sum()} - "
@@ -38,20 +42,25 @@ def handlingMissingData():
     print("######### /2 #########")
 
 def categoricalEncoder():
-    global df,label_encoder
-
+    global df
     ## 3
-    if label_encoder:
-        label_encoder = preprocessing.LabelEncoder()
-        df['target'] = label_encoder.fit_transform(df['target'])
-    ## 4
-    else:
-        ## todo
-        enc = OneHotEncoder(handle_unknown='ignore')
-        enc_df = pd.DataFrame(enc.fit_transform(df[['target']]).toarray())
-        df = df.join(enc_df)
-    # print(df)
+    label_encoder = preprocessing.LabelEncoder()
+    df['target'] = label_encoder.fit_transform(df['target'])
+    print("######### 3 #########")
+    print(label_encoder.inverse_transform([0]))
+    print(label_encoder.inverse_transform([1]))
+    print(label_encoder.inverse_transform([2]))
+    print("######### /3 #########")
 
+    ## 4
+    print("######### 4 #########")
+    enc = preprocessing.OneHotEncoder()
+    df_enc = enc.fit_transform(df[['target']].values.reshape(-1,1)).toarray()
+    types = ('Iris-setosa','Iris-versicolor','Iris-virginica')
+    df_enc = pd.DataFrame(df_enc,columns=types)
+    print(df_enc)
+    print("######### /4 #########")
+   
     
 
 def normalization():
@@ -91,10 +100,13 @@ def pca(x,y):
                 , columns = ['principal component 1', 'principal component 2'])
     s1 = pd.Series(y, name='target')
     principalDf = pd.concat([principalDf, s1], axis=1)
-    # print(principalDf)
+    print("######### 6 #########")
+    print(principalDf)
+    print("######### /6 #########")
     return principalDf
 
 def visualize(principalDf):
+    global box_plot_df
     fig = plt.figure(figsize = (8,8))
     ax = fig.add_subplot(1,1,1) 
     ax.set_xlabel('Principal Component 1', fontsize = 15)
@@ -103,7 +115,6 @@ def visualize(principalDf):
     targets = ['Iris-setosa', 'Iris-versicolor', 'Iris-virginica']
     colors = ['r', 'g', 'b']
     for _, tuple in principalDf.groupby("target"):
-        print("****")
         plt.scatter(tuple["principal component 1"], tuple["principal component 2"])
     ax.legend(targets)
     ax.grid()
@@ -111,7 +122,7 @@ def visualize(principalDf):
     fig.savefig("main.png")
     plt.cla()
     plt.figure(figsize = (10,10))
-    boxplot = df.boxplot(column=['sepal_length','sepal_width','petal_length','petal_width'])
+    boxplot = box_plot_df.boxplot(column=['sepal_length','sepal_width','petal_length','petal_width'])
     # fig.savefig("boxplot.png")
     plt.savefig("boxplot.png")
     
